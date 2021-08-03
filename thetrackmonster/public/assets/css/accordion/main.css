@@ -1,0 +1,101 @@
+button {
+    font-family: 'Antic Slab', serif !important;
+}
+
+body,
+html {
+    height: 100%;
+}
+
+.accordion_title {
+    background-color: #40423c;
+    padding         : 10px;
+    color           : white;
+    border-radius   : 5px;
+    cursor          : pointer;
+    margin-top      : 10px;
+    box-shadow      : 0 10px 15px rgba(25, 25, 25, 0.2);
+}
+
+.plus_signe_accordion {
+    text-align: right;
+}
+
+.hide_accordion_child {
+    max-height: 0 !important;
+    overflow  : hidden;
+    transition: max-height .2s ease-out;
+}
+
+.show_accordion_child {
+    max-height: 60px;
+    transition: max-height .3s ease-out;
+}
+
+.fas {
+    color: teal;
+}
+
+.select .select_content {
+    background-color: #40423c;
+    color           : white;
+    font-family     : thebold !important;
+    box-shadow      : 0 10px 15px rgba(25, 25, 25, 0.3);
+    display         : none;
+    position        : absolute;
+    z-index         : 1000000000;
+    width           : inherit;
+    border-radius   : 10px;
+}
+
+.first_select_element {
+    border-style    : solid;
+    padding         : 5px;
+    border-width    : 1px;
+    cursor          : pointer;
+    border-color    : #40423c;
+    background-color: #40423c;
+    color           : white;
+    font-family     : thebold !important;
+    box-shadow      : 0 10px 15px rgba(25, 25, 25, 0.2);
+    position        : relative;
+    z-index         : 10000;
+}
+
+.txt_select_start {
+    position: relative;
+    z-index : 100;
+}
+
+.fa-angle-down,
+.fa-angle-up {
+    margin-left: 20%;
+}
+
+.select-item {
+    padding: 5px;
+}
+
+.select-item:hover {
+    background-color: #01FF70;
+    cursor          : pointer;
+}
+
+.select-item:hover .fa-check {
+    color  : white;
+    display: inline-block !important;
+}
+
+
+.irier {
+    position: absolute;
+    right   : 10px;
+}
+
+@media screen and (max-width: 767px) {
+    .select .select_content {
+        position: relative;
+        width   : inherit;
+
+    }
+}

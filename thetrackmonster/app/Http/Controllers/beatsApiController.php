@@ -1,0 +1,249 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\DB;
+use App\Models\create_beats_table;
+use App\Models\tags;
+use App\Models\login_signup;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use App\Mail\Register;
+use App\Mail\NewPassword;
+use Illuminate\Support\Facades\Mail;
+use App\Models\LoginSession;
+
+class beatsApiController extends Controller
+{
+    public function register(Request $request)
+    {
+        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
+            $verify_if_email_exist =  login_signup::where('email', "=", $request->email)->count();
+            if ($verify_if_email_exist > 0) {
+                return 'This email already exists.';
+            } else if ($verify_if_email_exist == 0) {
+                //$hashed_random_password = Hash::make(Str::random(8));  //Hash::make(Str::random(8));
+                $pass_without_hash = Str::random(8);
+                $accounts = new  login_signup;
+                $accounts->email =  $request->email;
+                $accounts->password = Hash::make($pass_without_hash);
+                $accounts->save();
+                $user_password = ["new_user_generated_password" => $pass_without_hash];
+                Mail::to($request->email)->send(new Register($user_password));
+                return 'successfully connected.';
+            }
+        } else {
+            return 'Enter a valid email.';
+        }
+    }
+    public function login(Request $request)
+    {
+        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
+            $verify_if_email_exist_and_pass_correct =  login_signup::where('email', "=", $request->email)->count();
+            if ($verify_if_email_exist_and_pass_correct > 0) {
+                $hashedPassword =  login_signup::where('email', "=", $request->email)->value("password");
+                if (Hash::check($request->password, $hashedPassword)) {
+                    $token_simple = Str::random(60);
+                    $session_token = Hash::make($token_simple);
+                    $LoginSession_verify =  LoginSession::where('email', "=", $request->email)->count();
+                    if ($LoginSession_verify > 0) {
+                        LoginSession::where('email', '=', $request->email)->delete();
+                        $LoginSession = new LoginSession();
+                        $LoginSession->email = $request->email;
+                        $LoginSession->token = $session_token;
+                        $LoginSession->save();
+                        return  "successfully connected.";
+                    } else {
+                        $LoginSession = new LoginSession();
+                        $LoginSession->email = $request->email;
+                        $LoginSession->token = $session_token;
+                        $LoginSession->save();
+                        return  "successfully connected.";
+                    }
+                } else {
+                    return 'Cannot login, check your password or email.';
+                }
+            } else {
+                return 'Cannot login, check your password or email.';
+            }
+        } else {
+            return 'Enter a valid email.';
+        }
+    }
+    public function new_password(Request $request)
+    {
+        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
+            $verify_if_email_exist =  login_signup::where('email', "=", $request->email)->count();
+            if ($verify_if_email_exist > 0) {
+                $pass_without_hash = Str::random(8);
+                login_signup::where('email', "=", $request->email)->update(['password' => Hash::make($pass_without_hash)]);
+                $user_password = ["new_password" => $pass_without_hash];
+                Mail::to($request->email)->send(new NewPassword($user_password));
+                return "new password sent";
+            } else {
+                return 'No account matches with this email.';
+            }
+        } else {
+            return 'Enter a valid email.';
+        }
+    }
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        return create_beats_table::orderBy('id', "DESC")->skip(0)->take(1)->get();
+    }
+    public function all_beats()
+    {
+        return create_beats_table::orderBy('id', "ASC")->get();
+    }
+    public function beat_desc($id)
+    {
+        return create_beats_table::where('id', "=", $id)->get();
+    }
+
+    public function tags($id)
+    {
+        return tags::where('foreign_id', '=', $id)->skip(0)->take(3)->get();
+    }
+    public function Alltags()
+    {
+        return tags::all();
+    }
+    public function moods()
+    {
+        return create_beats_table::select('mood')->distinct()->get();
+    }
+    public function genre()
+    {
+        return create_beats_table::select('genre')->distinct()->get();
+    }
+    public function keys()
+    {
+        return create_beats_table::select('key')->distinct()->get();
+    }
+
+    public function select_depending_on_genre($genre)
+    {
+        return create_beats_table::where("genre", "=", $genre)->orderBy('id', "DESC")->get();
+    }
+    public function search_engine($engine_object)
+    { //return var_dump (json_decode($engine_object, true));
+        $engine_object_to_array =  json_decode($engine_object, true);
+        $final_query = [];
+        $array_auto = [];
+        $etat1  = null;
+        $etat2 = null;
+        $etat3 = null;
+        foreach (array_keys($engine_object_to_array) as $key => $value) {
+            if ($engine_object_to_array["q"] !== 'all') {
+                if ($value == "q") {
+                    array_push($array_auto, "tags.tags LIKE " . "'" . "%" . str_replace("+", " ", $engine_object_to_array[$value]) . "%" . "'");
+                }
+                if ($value != "q" and $value != "price" and $value != "bpm") {
+                    array_push($array_auto, "`" . $value . "`" . " = " . "'" . str_replace("+", " ", $engine_object_to_array[$value])  . "'");
+                }
+                if ($value == "price" || $value == "bpm") {
+                    $explode_value = explode("-", $engine_object_to_array[$value]);
+                    array_push($array_auto, $value . " BETWEEN " . $explode_value[0] . " AND " . $explode_value[1]);
+                }
+                //
+                $etat1 = 'ok';
+            } else  if ($engine_object_to_array["q"] == 'all') {
+
+                if (count(array_keys($engine_object_to_array)) > 1) {
+                    if ($value != "q" and $value != "price" and $value != "bpm") {
+                        array_push($array_auto, "`" . $value . "`" . " = " . "'" . str_replace("+", " ", $engine_object_to_array[$value])  . "'");
+                    }
+                    if ($value == "price" || $value == "bpm") {
+                        $explode_value = explode("-", $engine_object_to_array[$value]);
+                        array_push($array_auto, $value . " BETWEEN " . $explode_value[0] . " AND " . $explode_value[1]);
+                    }
+
+                    $etat2 = 'ok';
+                } else {
+                    $etat3 = 'ok';
+                }
+            }
+        }
+        if ($etat1 == 'ok') {
+            return create_beats_table::join('tags', "create_beats_tables.id", "=", "tags.foreign_id")->whereRaw(implode(" AND ", $array_auto))->select('create_beats_tables.*')->distinct()->get();
+        }
+        if ($etat2 == 'ok') {
+            return  create_beats_table::whereRaw(implode(" AND ", $array_auto))->get();
+        }
+        if ($etat3 == 'ok') {
+            return create_beats_table::all();
+        }
+    }
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //return $id;
+        return create_beats_table::where("id", "=", $id)->get();
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}
