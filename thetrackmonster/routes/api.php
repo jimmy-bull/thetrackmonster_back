@@ -34,3 +34,7 @@ Route::get('/beat_desc/{id}', [beatsApiController::class, 'beat_desc']);
 Route::get('/register/{email}', [beatsApiController::class, 'register']);
 Route::get('/login/{email}/{password}', [beatsApiController::class, 'login']);
 Route::get('/forgotPassword/{email}/', [beatsApiController::class, 'new_password']);
+Route::get('/token_verify/{token?}/', [beatsApiController::class, 'check_session_token'])->where('token', '(.*)');
+Route::get('/favoris/{token}/{foreign_id}', [beatsApiController::class, 'favoris'])->where(['token' => '(.*)', "foreign_id" => '[0-9]+']);
+Route::get('/get_favoris/{token}/', [beatsApiController::class, 'get_favoris'])->where(['token' => '(.*)']);
+Route::get('/favoris_show/{token}/', [beatsApiController::class, 'favoris_show'])->where(['token' => '(.*)']);

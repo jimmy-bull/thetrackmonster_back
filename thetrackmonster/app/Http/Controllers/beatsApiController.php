@@ -13,6 +13,7 @@ use App\Mail\Register;
 use App\Mail\NewPassword;
 use Illuminate\Support\Facades\Mail;
 use App\Models\LoginSession;
+use App\Models\favoris;
 
 class beatsApiController extends Controller
 {
@@ -53,13 +54,13 @@ class beatsApiController extends Controller
                         $LoginSession->email = $request->email;
                         $LoginSession->token = $session_token;
                         $LoginSession->save();
-                        return  "successfully connected.";
+                        return  $session_token;
                     } else {
                         $LoginSession = new LoginSession();
                         $LoginSession->email = $request->email;
                         $LoginSession->token = $session_token;
                         $LoginSession->save();
-                        return  "successfully connected.";
+                        return  $session_token;
                     }
                 } else {
                     return 'Cannot login, check your password or email.';
@@ -86,6 +87,52 @@ class beatsApiController extends Controller
             }
         } else {
             return 'Enter a valid email.';
+        }
+    }
+    public function check_session_token(Request $request)
+    {
+        $verify_token_correct =  LoginSession::where('token', "=", $request->token)->count();
+        if ($verify_token_correct > 0) {
+            return 'Already connected';
+        }
+    }
+    public function check_session_token_2($request)
+    {
+        $verify_token_correct =  LoginSession::where('token', "=", $request)->count();
+        if ($verify_token_correct > 0) {
+            return 'Already connected';
+        }
+    }
+    public function favoris(Request $request)
+    {
+        if ($this->check_session_token_2($request->token) == "Already connected") {
+            $verify_if_favoris_exist =  favoris::where('foreign_id', "=", $request->foreign_id)->count();
+            if ($verify_if_favoris_exist == 0) {
+                $favoris = new favoris();
+                $favoris->email =  LoginSession::where('token', "=", $request->token)->value('email');
+                $favoris->foreign_id =  $request->foreign_id;
+                $favoris->save();
+                $user_email = LoginSession::where('token', "=", $request->token)->value('email');
+                $count_current_user_favoris =  favoris::where('email', "=", $user_email)->count();
+                $response =  (object)[];
+                $response->message =  'Beat successfully added !';
+                $response->user_favoris_count =  $count_current_user_favoris;
+                return json_encode($response);
+            } else {
+                return "Beat already in wishlist";
+            }
+        } else {
+            return "Not connected";
+        }
+    }
+    public function get_favoris(Request $request)
+    {
+        if ($this->check_session_token_2($request->token) == "Already connected") {
+            $get_mail = LoginSession::where('token', "=", $request->token)->value('email');
+            $count_current_user_favoris =  favoris::where('email', "=", $get_mail)->count();
+            return $count_current_user_favoris;
+        } else {
+            return 'Not connected';
         }
     }
     /**
@@ -178,6 +225,15 @@ class beatsApiController extends Controller
         }
         if ($etat3 == 'ok') {
             return create_beats_table::all();
+        }
+    }
+    public function favoris_show(Request $request)
+    {
+        if ($this->check_session_token_2($request->token) == "Already connected") {
+            $get_mail = LoginSession::where('token', "=", $request->token)->value('email');
+            return create_beats_table::join('favoris', "create_beats_tables.id", "=", "favoris.foreign_id")->where("favoris.email", "=", $get_mail)->select('create_beats_tables.*')->get();
+        } else {
+            return 'Not connected';
         }
     }
     /**
