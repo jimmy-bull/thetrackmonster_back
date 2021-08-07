@@ -38,3 +38,4 @@ Route::get('/token_verify/{token?}/', [beatsApiController::class, 'check_session
 Route::get('/favoris/{token}/{foreign_id}', [beatsApiController::class, 'favoris'])->where(['token' => '(.*)', "foreign_id" => '[0-9]+']);
 Route::get('/get_favoris/{token}/', [beatsApiController::class, 'get_favoris'])->where(['token' => '(.*)']);
 Route::get('/favoris_show/{token}/', [beatsApiController::class, 'favoris_show'])->where(['token' => '(.*)']);
+Route::get('/favoris_delete/{token}/{foreign_id}', [beatsApiController::class, 'favoris_delete'])->where(['token' => '(.*)', "foreign_id" => '[0-9]+']);

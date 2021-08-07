@@ -236,6 +236,16 @@ class beatsApiController extends Controller
             return 'Not connected';
         }
     }
+    public function favoris_delete(Request $request)
+    {
+        if ($this->check_session_token_2($request->token) == "Already connected") {
+            $get_mail = LoginSession::where('token', "=", $request->token)->value('email');
+            favoris::where('email', '=',  $get_mail)->where('foreign_id', '=',  $request->foreign_id)->delete();
+            return create_beats_table::join('favoris', "create_beats_tables.id", "=", "favoris.foreign_id")->where("favoris.email", "=", $get_mail)->select('create_beats_tables.*')->get();
+        } else {
+            return 'Not connected';
+        }
+    }
     /**
      * Show the form for creating a new resource.
      *
