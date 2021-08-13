@@ -39,3 +39,10 @@ Route::get('/favoris/{token}/{foreign_id}', [beatsApiController::class, 'favoris
 Route::get('/get_favoris/{token}/', [beatsApiController::class, 'get_favoris'])->where(['token' => '(.*)']);
 Route::get('/favoris_show/{token}/', [beatsApiController::class, 'favoris_show'])->where(['token' => '(.*)']);
 Route::get('/favoris_delete/{token}/{foreign_id}', [beatsApiController::class, 'favoris_delete'])->where(['token' => '(.*)', "foreign_id" => '[0-9]+']);
+Route::get('/update_password/{token}/{password}', [beatsApiController::class, 'update_password'])->where(['token' => '(.*)', 'password' => '(.*)']);
+Route::get('/get_desc_siblings/{genre}', [beatsApiController::class, 'get_desc_siblings']);
+Route::get('/add_comment/{token}/{foreign_id}/{comment}', [beatsApiController::class, 'add_comment'])->where(['token' => '(.*)', 'comment' => '(.*)', "foreign_id" => '[0-9]+']);
+Route::get('/show_comment/{foreign_id}', [beatsApiController::class, 'show_comment'])->where(["foreign_id" => '[0-9]+']);
+
+
+//show_comment

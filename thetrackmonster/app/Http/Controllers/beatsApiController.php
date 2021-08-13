@@ -14,6 +14,7 @@ use App\Mail\NewPassword;
 use Illuminate\Support\Facades\Mail;
 use App\Models\LoginSession;
 use App\Models\favoris;
+use App\Models\comment;
 
 class beatsApiController extends Controller
 {
@@ -106,7 +107,7 @@ class beatsApiController extends Controller
     public function favoris(Request $request)
     {
         if ($this->check_session_token_2($request->token) == "Already connected") {
-            $verify_if_favoris_exist =  favoris::where('foreign_id', "=", $request->foreign_id)->count();
+            $verify_if_favoris_exist =  favoris::where('foreign_id', "=", $request->foreign_id)->where('email', "=",  LoginSession::where('token', "=", $request->token)->value('email'))->count();
             if ($verify_if_favoris_exist == 0) {
                 $favoris = new favoris();
                 $favoris->email =  LoginSession::where('token', "=", $request->token)->value('email');
@@ -246,6 +247,50 @@ class beatsApiController extends Controller
             return 'Not connected';
         }
     }
+    public function update_password(Request $request)
+    {
+        if ($this->check_session_token_2($request->token) == "Already connected") {
+            if (preg_match("/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/", $request->password)) {
+                $get_mail = LoginSession::where('token', "=", $request->token)->value('email');
+                login_signup::where('email', "=",  $get_mail)->update(['password' => Hash::make($request->password)]);
+                return 'Password has been changed successfully.';
+            } else {
+                return 'Please enter minimum eight characters, at least one letter, one number and one special character.';
+            }
+        } else {
+            return 'Not connected.';
+        }
+    }
+    public function get_desc_siblings(Request $request)
+    {
+        return create_beats_table::where('genre', "=", $request->genre)->get();
+    }
+    public function add_comment(Request $request)
+    {
+        if ($this->check_session_token_2($request->token) == "Already connected") {
+            $get_mail = LoginSession::where('token', "=", $request->token)->value('email');
+            $comment = new  comment;
+            $comment->foreign_id = $request->foreign_id;
+            $comment->user_email = $get_mail;
+            $comment->comment_text = $request->comment;
+            $comment->save();
+            return 'Comment successfully added';
+        } else {
+            return 'Not connected.';
+        }
+    }
+    public function show_comment(Request $request)
+    {
+        return comment::select(comment::raw('SUBSTRING(user_email, 5, 20) as user_email, comment_text,created_at'))->where('foreign_id', "=", $request->foreign_id)->get();
+    }
+
+    /**
+     * ID
+     * FOREIGN_ID
+     * USER_EMAIL
+     * COMMENT_TEXT
+     * DATE
+     */
     /**
      * Show the form for creating a new resource.
      *
