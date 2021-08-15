@@ -44,5 +44,5 @@ Route::get('/get_desc_siblings/{genre}', [beatsApiController::class, 'get_desc_s
 Route::get('/add_comment/{token}/{foreign_id}/{comment}', [beatsApiController::class, 'add_comment'])->where(['token' => '(.*)', 'comment' => '(.*)', "foreign_id" => '[0-9]+']);
 Route::get('/show_comment/{foreign_id}', [beatsApiController::class, 'show_comment'])->where(["foreign_id" => '[0-9]+']);
 
-
+Route::get('/free_download/{id}', [beatsApiController::class, 'free_download'])->where(["id" => '[0-9]+']);
 //show_comment

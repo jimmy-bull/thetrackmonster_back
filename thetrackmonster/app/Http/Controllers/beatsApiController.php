@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\LoginSession;
 use App\Models\favoris;
 use App\Models\comment;
+use File;
+use Illuminate\Support\Facades\Storage;
 
 class beatsApiController extends Controller
 {
@@ -281,16 +283,25 @@ class beatsApiController extends Controller
     }
     public function show_comment(Request $request)
     {
-        return comment::select(comment::raw('SUBSTRING(user_email, 5, 20) as user_email, comment_text,created_at'))->where('foreign_id', "=", $request->foreign_id)->get();
+        return comment::select(comment::raw('SUBSTRING(user_email, 5, 20) as user_email, comment_text,created_at,DATE_FORMAT(created_at, "%D %b %Y") as date_correct'))->where('foreign_id', "=", $request->foreign_id)->get();
     }
 
     /**
-     * ID
-     * FOREIGN_ID
-     * USER_EMAIL
-     * COMMENT_TEXT
-     * DATE
+     * FREE DONWLOAD PART
      */
+
+    public function free_download(Request $request)
+    {
+        //$pieces = explode("audio/", "http://127.0.0.1:8000/audio/6lack-type-beat-bresom-instru-rap-2021.mp3");
+        //  echo  "audio/" . $pieces[1];
+        // return create_beats_table::where('id', "=", $request->id)->count();
+        if (create_beats_table::where('id', "=", $request->id)->value("downloadable") == True) {
+            $pieces = explode("audio/", create_beats_table::where('id', "=", $request->id)->value("src"));
+            return Storage::download('public/audio/'.$pieces[1]);
+        } else {
+            return "you are not authorized to access this link.";
+        }
+    }
     /**
      * Show the form for creating a new resource.
      *
